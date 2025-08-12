@@ -128,7 +128,12 @@ app.post('/api/analyze-coffee', async (req, res) => {
         // Parse the JSON response from Claude
         let analysisResult;
         try {
-            analysisResult = JSON.parse(data.content[0].text);
+            let responseText = data.content[0].text;
+            
+            // Clean up response - remove markdown code blocks if present
+            responseText = responseText.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();
+            
+            analysisResult = JSON.parse(responseText);
         } catch (parseError) {
             console.error('Failed to parse Claude response:', data.content[0].text);
             return res.status(500).json({ 
