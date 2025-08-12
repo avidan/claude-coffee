@@ -140,34 +140,7 @@
     <script>
         console.log('Script starting...');
 
-        // Coffee brewing profiles
-        const BREWING_PROFILES = {
-            Ethiopia: {
-                baseTemp: 205,
-                grindSize: 'medium-fine',
-                bloomTime: 45,
-                totalTime: 4.5,
-                waterRatio: 16,
-                steps: [
-                    { temp: 205, time: '0:00-0:45', action: 'Bloom with 2x coffee weight in water' },
-                    { temp: 200, time: '0:45-2:30', action: 'Slow circular pour to 60% total water' },
-                    { temp: 195, time: '2:30-4:30', action: 'Final pour and drawdown' }
-                ]
-            },
-            Colombia: {
-                baseTemp: 200,
-                grindSize: 'medium',
-                bloomTime: 30,
-                totalTime: 5,
-                waterRatio: 17,
-                steps: [
-                    { temp: 200, time: '0:00-0:30', action: 'Bloom with gentle pour' },
-                    { temp: 196, time: '0:30-2:45', action: 'Steady pour in center' },
-                    { temp: 192, time: '2:45-5:00', action: 'Final extraction phase' }
-                ]
-            }
-        };
-
+        // Water treatments (still needed for adjustments)
         const WATER_TREATMENTS = {
             pure: { tempAdjust: 0, timeAdjust: 0, description: 'Pure water - no adjustments needed' },
             apax: { tempAdjust: -3, timeAdjust: 15, description: 'Apax drops - reduce temp 3°F, extend time 15s' }
@@ -268,10 +241,11 @@
         }
 
         function generateRecipe(coffeeInfo) {
-            const country = coffeeInfo.country || 'Colombia';
-            const profile = BREWING_PROFILES[country] || BREWING_PROFILES.Colombia;
+            // Use the AI-generated brewing profile from coffeeInfo
+            const profile = coffeeInfo.brewingProfile;
             const treatment = WATER_TREATMENTS[state.waterTreatment];
 
+            // Apply water treatment adjustments to the AI-generated profile
             const adjustedProfile = {
                 ...profile,
                 steps: profile.steps.map(step => ({
@@ -282,7 +256,7 @@
 
             const fellowRecipe = {
                 id: Date.now(),
-                name: `${coffeeInfo.coffeeName || 'Custom Coffee'} - ${country}`,
+                name: `${coffeeInfo.coffeeName || 'Custom Coffee'} - ${coffeeInfo.country || 'Unknown Origin'}`,
                 coffee: coffeeInfo,
                 profile: adjustedProfile,
                 waterTreatment: state.waterTreatment,
