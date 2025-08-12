@@ -37,6 +37,20 @@ app.post('/api/analyze-coffee', async (req, res) => {
             return res.status(500).json({ error: 'Claude API key not configured' });
         }
 
+        // Normalize MIME type to supported formats
+        let normalizedMimeType = mimeType;
+        if (mimeType.includes('png')) {
+            normalizedMimeType = 'image/png';
+        } else if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
+            normalizedMimeType = 'image/jpeg';
+        } else if (mimeType.includes('gif')) {
+            normalizedMimeType = 'image/gif';
+        } else if (mimeType.includes('webp')) {
+            normalizedMimeType = 'image/webp';
+        }
+
+        console.log(`Processing image: ${normalizedMimeType}, data length: ${imageData.length}`);
+
         // Call Claude API
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
@@ -55,7 +69,7 @@ app.post('/api/analyze-coffee', async (req, res) => {
                             type: 'image',
                             source: {
                                 type: 'base64',
-                                media_type: mimeType,
+                                media_type: normalizedMimeType,
                                 data: imageData
                             }
                         },
