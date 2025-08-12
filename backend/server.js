@@ -37,19 +37,38 @@ app.post('/api/analyze-coffee', async (req, res) => {
             return res.status(500).json({ error: 'Claude API key not configured' });
         }
 
-        // Normalize MIME type to supported formats
-        let normalizedMimeType = mimeType;
-        if (mimeType.includes('png')) {
-            normalizedMimeType = 'image/png';
-        } else if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
-            normalizedMimeType = 'image/jpeg';
-        } else if (mimeType.includes('gif')) {
-            normalizedMimeType = 'image/gif';
-        } else if (mimeType.includes('webp')) {
-            normalizedMimeType = 'image/webp';
+        // Detect actual image format from base64 data
+        function detectImageFormat(base64Data) {
+            const header = base64Data.substring(0, 20);
+            
+            // PNG signature
+            if (header.startsWith('iVBORw0KGgo')) {
+                return 'image/png';
+            }
+            // JPEG signature  
+            if (header.startsWith('/9j/') || header.startsWith('UklGR')) {
+                return 'image/jpeg';
+            }
+            // GIF signature
+            if (header.startsWith('R0lGODlh') || header.startsWith('R0lGODdh')) {
+                return 'image/gif';
+            }
+            // WebP signature
+            if (header.startsWith('UklGR') && base64Data.includes('V0VCUw')) {
+                return 'image/webp';
+            }
+            
+            // Fallback to provided MIME type
+            if (mimeType.includes('png')) return 'image/png';
+            if (mimeType.includes('jpeg') || mimeType.includes('jpg')) return 'image/jpeg';
+            if (mimeType.includes('gif')) return 'image/gif';
+            if (mimeType.includes('webp')) return 'image/webp';
+            
+            return 'image/jpeg'; // Default fallback
         }
 
-        console.log(`Processing image: ${normalizedMimeType}, data length: ${imageData.length}`);
+        const detectedMimeType = detectImageFormat(imageData);
+        console.log(`Original MIME: ${mimeType}, Detected: ${detectedMimeType}, Data length: ${imageData.length}`);
 
         // Call Claude API
         const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -69,7 +88,7 @@ app.post('/api/analyze-coffee', async (req, res) => {
                             type: 'image',
                             source: {
                                 type: 'base64',
-                                media_type: normalizedMimeType,
+                                media_type: detectedMimeType,
                                 data: imageData
                             }
                         },
