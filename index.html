@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coffee Brewing Optimizer</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -84,11 +84,23 @@
     </style>
 </head>
 <body class="min-h-screen coffee-bg">
-    <div id="root"></div>
+    <div id="root">
+        <div class="min-h-screen flex items-center justify-center">
+            <div class="text-center text-white">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                <p>Loading Coffee Brewing Optimizer...</p>
+            </div>
+        </div>
+    </div>
 
     <script type="text/babel">
-        const { useState, useRef, useEffect } = React;
-        const { Camera, Upload, Download, Share2, Droplets, Coffee, Thermometer, Clock, MapPin, Award, Zap, ChevronRight, X, Check, AlertCircle } = lucide;
+        // Wait for all dependencies to load
+        if (!window.React || !window.ReactDOM || !window.lucide) {
+            console.error('Dependencies not loaded properly');
+            document.getElementById('root').innerHTML = '<div class="min-h-screen flex items-center justify-center"><div class="text-center text-white"><p>Error loading application. Please refresh the page.</p></div></div>';
+        } else {
+            const { useState, useRef, useEffect } = React;
+            const { Camera, Upload, Download, Share2, Droplets, Coffee, Thermometer, Clock, MapPin, Award, Zap, ChevronRight, X, Check, AlertCircle } = lucide;
 
         // Coffee brewing optimization algorithms
         const BREWING_PROFILES = {
@@ -599,7 +611,8 @@
             );
         }
 
-        ReactDOM.render(<CoffeeBrewingApp />, document.getElementById('root'));
+            ReactDOM.render(<CoffeeBrewingApp />, document.getElementById('root'));
+        }
     </script>
 </body>
 </html>
