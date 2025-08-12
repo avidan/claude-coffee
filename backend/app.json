@@ -1,0 +1,25 @@
+{
+  "name": "Coffee Brewing Optimizer Backend",
+  "description": "Secure backend proxy for Coffee Brewing Optimizer - handles Claude API calls",
+  "repository": "https://github.com/avidan/claude-coffee",
+  "keywords": ["coffee", "ai", "vision", "claude", "brewing"],
+  "image": "heroku/nodejs",
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "env": {
+    "CLAUDE_API_KEY": {
+      "description": "Your Claude API key from https://console.anthropic.com/",
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": []
+}
