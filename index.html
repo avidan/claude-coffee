@@ -461,76 +461,80 @@
             
             else if (state.currentView === 'recipe' && state.recipe) {
                 root.innerHTML = `
-                    <div class="min-h-screen flex flex-col p-6">
+                    <div class="min-h-screen flex flex-col p-4">
+                        <!-- Header -->
                         <div class="flex items-center justify-between mb-6">
-                            <button id="backBtn" class="text-white p-2">
-                                ${createIcon('x-icon', 'w-6 h-6').outerHTML}
+                            <button id="backBtn" class="text-white p-2 opacity-70 hover:opacity-100">
+                                ${createIcon('x-icon', 'w-5 h-5').outerHTML}
                             </button>
-                            <h2 class="text-xl font-bold text-white">Optimized Recipe</h2>
-                            <div></div>
+                            <div class="text-center">
+                                <h1 class="text-lg font-bold text-white">${state.recipe.coffee.coffeeName || 'Coffee Recipe'}</h1>
+                                <p class="text-sm text-white opacity-70">${state.recipe.coffee.roaster} • ${state.recipe.coffee.country}</p>
+                            </div>
+                            <div class="w-9"></div>
                         </div>
                         
-                        <div class="flex-1">
-                            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-6 mb-6">
-                                <h3 class="text-2xl font-bold text-white mb-4">${state.recipe.name}</h3>
-                                
-                                <div class="grid grid-cols-2 gap-4 mb-6">
-                                    <div class="flex items-center space-x-2 text-white text-opacity-80">
-                                        <span class="text-sm">📍 ${state.recipe.coffee.country}</span>
+                        <!-- Main Content -->
+                        <div class="flex-1 space-y-6">
+                            <!-- Key Details -->
+                            <div class="bg-white bg-opacity-15 rounded-2xl p-5">
+                                <div class="grid grid-cols-3 gap-4 text-center">
+                                    <div>
+                                        <div class="text-2xl font-bold text-white">${state.recipe.profile.baseTemp}°F</div>
+                                        <div class="text-xs text-white opacity-70 uppercase tracking-wide">Temp</div>
                                     </div>
-                                    <div class="flex items-center space-x-2 text-white text-opacity-80">
-                                        <span class="text-sm">🔥 ${state.recipe.coffee.roastLevel}</span>
+                                    <div>
+                                        <div class="text-2xl font-bold text-white">${state.recipe.profile.totalTime}m</div>
+                                        <div class="text-xs text-white opacity-70 uppercase tracking-wide">Time</div>
                                     </div>
-                                    <div class="flex items-center space-x-2 text-white text-opacity-80">
-                                        <span class="text-sm">🌡️ ${state.recipe.profile.baseTemp}°F</span>
-                                    </div>
-                                    <div class="flex items-center space-x-2 text-white text-opacity-80">
-                                        <span class="text-sm">⏱️ ${state.recipe.profile.totalTime} min</span>
+                                    <div>
+                                        <div class="text-2xl font-bold text-white capitalize">${state.recipe.coffee.roastLevel}</div>
+                                        <div class="text-xs text-white opacity-70 uppercase tracking-wide">Roast</div>
                                     </div>
                                 </div>
                                 
                                 ${state.recipe.coffee.flavorNotes && state.recipe.coffee.flavorNotes.length > 0 ? `
-                                    <div class="mb-6">
-                                        <h4 class="text-white font-semibold mb-2">Flavor Notes</h4>
-                                        <div class="flex flex-wrap gap-2">
+                                    <div class="mt-4 pt-4 border-t border-white border-opacity-20">
+                                        <div class="flex flex-wrap gap-1.5 justify-center">
                                             ${state.recipe.coffee.flavorNotes.map(note => `
-                                                <span class="bg-white bg-opacity-20 text-white px-3 py-1 rounded-full text-sm">${note}</span>
+                                                <span class="bg-white bg-opacity-25 text-white px-2.5 py-1 rounded-full text-xs">${note}</span>
                                             `).join('')}
                                         </div>
                                     </div>
                                 ` : ''}
                             </div>
                             
-                            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-6 mb-6">
-                                <h4 class="text-white font-semibold mb-4 flex items-center space-x-2">
-                                    ${createIcon('coffee-icon').outerHTML}
-                                    <span>Brewing Steps</span>
-                                </h4>
+                            <!-- Brewing Steps -->
+                            <div class="bg-white bg-opacity-15 rounded-2xl p-5">
+                                <h3 class="text-white font-semibold mb-4 text-center">Brewing Steps</h3>
                                 
-                                <div class="space-y-4">
+                                <div class="space-y-3">
                                     ${state.recipe.profile.steps.map((step, index) => `
-                                        <div class="flex items-start space-x-4">
-                                            <div class="step-number">${index + 1}</div>
-                                            <div class="flex-1">
-                                                <div class="flex items-center space-x-4 mb-1">
-                                                    <span class="text-white font-medium">${step.temp}°F</span>
-                                                    <span class="text-white text-opacity-80 text-sm">${step.time}</span>
+                                        <div class="flex items-start space-x-3">
+                                            <div class="w-6 h-6 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center flex-shrink-0">
+                                                <span class="text-white text-xs font-bold">${index + 1}</span>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center space-x-3 mb-1">
+                                                    <span class="text-white font-semibold text-sm">${step.temp}°F</span>
+                                                    <span class="text-white opacity-60 text-xs">${step.time}</span>
                                                 </div>
-                                                <p class="text-white text-opacity-90 text-sm">${step.action}</p>
+                                                <p class="text-white opacity-90 text-sm leading-relaxed">${step.action}</p>
                                             </div>
                                         </div>
                                     `).join('')}
                                 </div>
                             </div>
                             
-                            <div class="grid grid-cols-2 gap-3">
-                                <button id="downloadBtn" class="btn btn-primary">
-                                    ${createIcon('download-icon').outerHTML}
+                            <!-- Action Buttons -->
+                            <div class="grid grid-cols-2 gap-3 pt-2">
+                                <button id="downloadBtn" class="bg-white text-orange-600 py-4 rounded-2xl font-semibold flex items-center justify-center space-x-2 shadow-lg">
+                                    ${createIcon('download-icon', 'w-5 h-5').outerHTML}
                                     <span>Download</span>
                                 </button>
                                 
-                                <button id="shareBtn" class="btn btn-secondary">
-                                    ${createIcon('share-icon').outerHTML}
+                                <button id="shareBtn" class="bg-white bg-opacity-20 text-white py-4 rounded-2xl font-semibold flex items-center justify-center space-x-2 border border-white border-opacity-30">
+                                    ${createIcon('share-icon', 'w-5 h-5').outerHTML}
                                     <span>Share</span>
                                 </button>
                             </div>
