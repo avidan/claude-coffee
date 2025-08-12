@@ -6,7 +6,6 @@
     <title>Coffee Brewing Optimizer</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script>
@@ -26,10 +25,6 @@
                             800: '#973f1c',
                             900: '#7a351b'
                         }
-                    },
-                    backgroundImage: {
-                        'coffee-gradient': 'linear-gradient(135deg, #f59e3d 0%, #e3681a 50%, #bc4f18 100%)',
-                        'amber-gradient': 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)'
                     }
                 }
             }
@@ -38,9 +33,6 @@
     <style>
         .coffee-bg {
             background: linear-gradient(135deg, #f59e3d 0%, #e3681a 50%, #bc4f18 100%);
-        }
-        .amber-bg {
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
         }
         .glass-effect {
             background: rgba(255, 255, 255, 0.1);
@@ -63,13 +55,6 @@
             border-radius: 12px;
             pointer-events: none;
         }
-        .recipe-card {
-            transition: all 0.3s ease;
-        }
-        .recipe-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        }
         .step-number {
             width: 32px;
             height: 32px;
@@ -81,28 +66,32 @@
             color: white;
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #fff;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="min-h-screen coffee-bg">
     <div id="root">
         <div class="min-h-screen flex items-center justify-center">
             <div class="text-center text-white">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                <div class="loading-spinner mx-auto mb-4"></div>
                 <p>Loading Coffee Brewing Optimizer...</p>
             </div>
         </div>
     </div>
 
-    <script type="text/babel">
-        // Wait for all dependencies to load
-        if (!window.React || !window.ReactDOM || !window.lucide) {
-            console.error('Dependencies not loaded properly');
-            document.getElementById('root').innerHTML = '<div class="min-h-screen flex items-center justify-center"><div class="text-center text-white"><p>Error loading application. Please refresh the page.</p></div></div>';
-        } else {
-            const { useState, useRef, useEffect } = React;
-            const { Camera, Upload, Download, Share2, Droplets, Coffee, Thermometer, Clock, MapPin, Award, Zap, ChevronRight, X, Check, AlertCircle } = lucide;
-
-        // Coffee brewing optimization algorithms
+    <script>
+        // Coffee brewing profiles
         const BREWING_PROFILES = {
             Ethiopia: {
                 baseTemp: 205,
@@ -171,447 +160,404 @@
             apax: { tempAdjust: -3, timeAdjust: 15, description: 'Apax drops - reduce temp 3°F, extend time 15s' }
         };
 
-        function CoffeeBrewingApp() {
-            const [currentView, setCurrentView] = useState('camera');
-            const [capturedImage, setCapturedImage] = useState(null);
-            const [coffeeData, setCoffeeData] = useState(null);
-            const [recipe, setRecipe] = useState(null);
-            const [waterTreatment, setWaterTreatment] = useState('pure');
-            const [isAnalyzing, setIsAnalyzing] = useState(false);
-            const [apiKey, setApiKey] = useState('');
-            const [error, setError] = useState('');
-            
-            const fileInputRef = useRef(null);
-            const videoRef = useRef(null);
-            const canvasRef = useRef(null);
+        // Wait for dependencies to load
+        function initApp() {
+            if (!window.React || !window.ReactDOM || !window.lucide) {
+                setTimeout(initApp, 100);
+                return;
+            }
 
-            const handleImageCapture = async (file) => {
-                if (!file) return;
+            const { useState, useRef } = React;
+            const { Camera, Upload, Download, Share2, Droplets, Coffee, Thermometer, Clock, MapPin, Award, Zap, X, AlertCircle } = lucide;
 
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    const imageDataUrl = e.target.result;
-                    setCapturedImage(imageDataUrl);
-                    setCurrentView('analyze');
+            function CoffeeBrewingApp() {
+                const [currentView, setCurrentView] = useState('camera');
+                const [capturedImage, setCapturedImage] = useState(null);
+                const [coffeeData, setCoffeeData] = useState(null);
+                const [recipe, setRecipe] = useState(null);
+                const [waterTreatment, setWaterTreatment] = useState('pure');
+                const [isAnalyzing, setIsAnalyzing] = useState(false);
+                const [apiKey, setApiKey] = useState('');
+                const [error, setError] = useState('');
+                
+                const fileInputRef = useRef(null);
+
+                const handleImageCapture = async (file) => {
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        const imageDataUrl = e.target.result;
+                        setCapturedImage(imageDataUrl);
+                        setCurrentView('analyze');
+                    };
+                    reader.readAsDataURL(file);
                 };
-                reader.readAsDataURL(file);
-            };
 
-            const analyzeImage = async () => {
-                if (!capturedImage || !apiKey) {
-                    setError('Please provide an API key and capture an image');
-                    return;
-                }
-
-                setIsAnalyzing(true);
-                setError('');
-
-                try {
-                    const base64Data = capturedImage.split(',')[1];
-                    const mimeType = capturedImage.split(',')[0].split(':')[1].split(';')[0];
-
-                    const response = await fetch('https://api.anthropic.com/v1/messages', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-api-key': apiKey
-                        },
-                        body: JSON.stringify({
-                            model: 'claude-sonnet-4-20250514',
-                            max_tokens: 1000,
-                            messages: [{
-                                role: 'user',
-                                content: [
-                                    {
-                                        type: 'image',
-                                        source: {
-                                            type: 'base64',
-                                            media_type: mimeType,
-                                            data: base64Data
-                                        }
-                                    },
-                                    {
-                                        type: 'text',
-                                        text: `Analyze this coffee bag image and extract the following information in JSON format:
-                                        {
-                                            "country": "country of origin",
-                                            "region": "specific region/farm if visible",
-                                            "roaster": "roaster name",
-                                            "coffeeName": "specific coffee name/blend",
-                                            "roastLevel": "light/medium/dark",
-                                            "processing": "washed/natural/honey/etc",
-                                            "variety": "bean variety if visible",
-                                            "flavorNotes": ["flavor", "notes", "array"],
-                                            "elevation": "elevation if visible",
-                                            "confidence": "high/medium/low based on image clarity"
-                                        }
-                                        Only return the JSON, no other text.`
-                                    }
-                                ]
-                            }]
-                        })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`API request failed: ${response.status}`);
+                const analyzeImage = async () => {
+                    if (!capturedImage || !apiKey) {
+                        setError('Please provide an API key and capture an image');
+                        return;
                     }
 
-                    const data = await response.json();
-                    const analysisResult = JSON.parse(data.content[0].text);
-                    setCoffeeData(analysisResult);
-                    generateRecipe(analysisResult);
-                    setCurrentView('recipe');
-                } catch (error) {
-                    console.error('Analysis error:', error);
-                    setError('Failed to analyze image. Please check your API key and try again.');
-                } finally {
-                    setIsAnalyzing(false);
-                }
-            };
+                    setIsAnalyzing(true);
+                    setError('');
 
-            const generateRecipe = (coffeeInfo) => {
-                const country = coffeeInfo.country || 'Colombia';
-                const profile = BREWING_PROFILES[country] || BREWING_PROFILES.Colombia;
-                const treatment = WATER_TREATMENTS[waterTreatment];
-
-                const adjustedProfile = {
-                    ...profile,
-                    steps: profile.steps.map(step => ({
-                        ...step,
-                        temp: step.temp + treatment.tempAdjust,
-                        time: adjustAdjustTime(step.time, treatment.timeAdjust)
-                    }))
-                };
-
-                const fellowRecipe = {
-                    id: Date.now(),
-                    name: `${coffeeInfo.coffeeName || 'Custom Coffee'} - ${country}`,
-                    coffee: coffeeInfo,
-                    profile: adjustedProfile,
-                    waterTreatment: waterTreatment,
-                    createdAt: new Date().toISOString()
-                };
-
-                setRecipe(fellowRecipe);
-            };
-
-            const adjustAdjustTime = (timeRange, adjustment) => {
-                if (adjustment === 0) return timeRange;
-                
-                const [start, end] = timeRange.split('-');
-                const [endMin, endSec] = end.split(':').map(Number);
-                const totalSeconds = endMin * 60 + endSec + adjustment;
-                const newMin = Math.floor(totalSeconds / 60);
-                const newSec = totalSeconds % 60;
-                
-                return `${start}-${newMin}:${newSec.toString().padStart(2, '0')}`;
-            };
-
-            const downloadRecipe = () => {
-                if (!recipe) return;
-
-                const fellowAidenRecipe = {
-                    version: "1.0",
-                    name: recipe.name,
-                    description: `Optimized recipe for ${recipe.coffee.country} coffee with ${waterTreatment} water treatment`,
-                    coffeeAmount: "22g",
-                    waterAmount: `${Math.round(22 * recipe.profile.waterRatio)}g`,
-                    grindSize: recipe.profile.grindSize,
-                    steps: recipe.profile.steps.map((step, index) => ({
-                        step: index + 1,
-                        temperature: `${step.temp}°F`,
-                        duration: step.time.split('-')[1],
-                        instruction: step.action,
-                        pourPattern: index === 0 ? "center" : "spiral"
-                    })),
-                    metadata: {
-                        origin: recipe.coffee.country,
-                        roaster: recipe.coffee.roaster,
-                        roastLevel: recipe.coffee.roastLevel,
-                        flavorNotes: recipe.coffee.flavorNotes,
-                        waterTreatment: waterTreatment,
-                        createdBy: "Coffee Brewing Optimizer",
-                        createdAt: recipe.createdAt
-                    }
-                };
-
-                const blob = new Blob([JSON.stringify(fellowAidenRecipe, null, 2)], {
-                    type: 'application/json'
-                });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${recipe.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_fellow_aiden.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-            };
-
-            const shareRecipe = async () => {
-                if (!recipe) return;
-
-                const shareText = `☕ ${recipe.name}\n\n🌍 Origin: ${recipe.coffee.country}\n🔥 Roast: ${recipe.coffee.roastLevel}\n\n📝 Recipe:\n${recipe.profile.steps.map((step, i) => `${i + 1}. ${step.temp}°F - ${step.time}\n   ${step.action}`).join('\n')}\n\n💧 Water: ${waterTreatment === 'pure' ? 'Pure water' : 'With Apax drops'}\n\nCreated with Coffee Brewing Optimizer`;
-
-                if (navigator.share) {
                     try {
-                        await navigator.share({
-                            title: recipe.name,
-                            text: shareText
+                        const base64Data = capturedImage.split(',')[1];
+                        const mimeType = capturedImage.split(',')[0].split(':')[1].split(';')[0];
+
+                        const response = await fetch('https://api.anthropic.com/v1/messages', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-api-key': apiKey
+                            },
+                            body: JSON.stringify({
+                                model: 'claude-sonnet-4-20250514',
+                                max_tokens: 1000,
+                                messages: [{
+                                    role: 'user',
+                                    content: [
+                                        {
+                                            type: 'image',
+                                            source: {
+                                                type: 'base64',
+                                                media_type: mimeType,
+                                                data: base64Data
+                                            }
+                                        },
+                                        {
+                                            type: 'text',
+                                            text: `Analyze this coffee bag image and extract the following information in JSON format:
+                                            {
+                                                "country": "country of origin",
+                                                "region": "specific region/farm if visible",
+                                                "roaster": "roaster name",
+                                                "coffeeName": "specific coffee name/blend",
+                                                "roastLevel": "light/medium/dark",
+                                                "processing": "washed/natural/honey/etc",
+                                                "variety": "bean variety if visible",
+                                                "flavorNotes": ["flavor", "notes", "array"],
+                                                "elevation": "elevation if visible",
+                                                "confidence": "high/medium/low based on image clarity"
+                                            }
+                                            Only return the JSON, no other text.`
+                                        }
+                                    ]
+                                }]
+                            })
                         });
+
+                        if (!response.ok) {
+                            throw new Error(`API request failed: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+                        const analysisResult = JSON.parse(data.content[0].text);
+                        setCoffeeData(analysisResult);
+                        generateRecipe(analysisResult);
+                        setCurrentView('recipe');
                     } catch (error) {
-                        console.log('Share cancelled');
+                        console.error('Analysis error:', error);
+                        setError('Failed to analyze image. Please check your API key and try again.');
+                    } finally {
+                        setIsAnalyzing(false);
                     }
-                } else {
-                    navigator.clipboard.writeText(shareText);
-                    alert('Recipe copied to clipboard!');
+                };
+
+                const generateRecipe = (coffeeInfo) => {
+                    const country = coffeeInfo.country || 'Colombia';
+                    const profile = BREWING_PROFILES[country] || BREWING_PROFILES.Colombia;
+                    const treatment = WATER_TREATMENTS[waterTreatment];
+
+                    const adjustedProfile = {
+                        ...profile,
+                        steps: profile.steps.map(step => ({
+                            ...step,
+                            temp: step.temp + treatment.tempAdjust
+                        }))
+                    };
+
+                    const fellowRecipe = {
+                        id: Date.now(),
+                        name: `${coffeeInfo.coffeeName || 'Custom Coffee'} - ${country}`,
+                        coffee: coffeeInfo,
+                        profile: adjustedProfile,
+                        waterTreatment: waterTreatment,
+                        createdAt: new Date().toISOString()
+                    };
+
+                    setRecipe(fellowRecipe);
+                };
+
+                const downloadRecipe = () => {
+                    if (!recipe) return;
+
+                    const fellowAidenRecipe = {
+                        version: "1.0",
+                        name: recipe.name,
+                        description: `Optimized recipe for ${recipe.coffee.country} coffee with ${waterTreatment} water treatment`,
+                        coffeeAmount: "22g",
+                        waterAmount: `${Math.round(22 * recipe.profile.waterRatio)}g`,
+                        grindSize: recipe.profile.grindSize,
+                        steps: recipe.profile.steps.map((step, index) => ({
+                            step: index + 1,
+                            temperature: `${step.temp}°F`,
+                            duration: step.time.split('-')[1],
+                            instruction: step.action,
+                            pourPattern: index === 0 ? "center" : "spiral"
+                        })),
+                        metadata: {
+                            origin: recipe.coffee.country,
+                            roaster: recipe.coffee.roaster,
+                            roastLevel: recipe.coffee.roastLevel,
+                            flavorNotes: recipe.coffee.flavorNotes,
+                            waterTreatment: waterTreatment,
+                            createdBy: "Coffee Brewing Optimizer",
+                            createdAt: recipe.createdAt
+                        }
+                    };
+
+                    const blob = new Blob([JSON.stringify(fellowAidenRecipe, null, 2)], {
+                        type: 'application/json'
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${recipe.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_fellow_aiden.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                };
+
+                const shareRecipe = async () => {
+                    if (!recipe) return;
+
+                    const shareText = `☕ ${recipe.name}\n\n🌍 Origin: ${recipe.coffee.country}\n🔥 Roast: ${recipe.coffee.roastLevel}\n\n📝 Recipe:\n${recipe.profile.steps.map((step, i) => `${i + 1}. ${step.temp}°F - ${step.time}\n   ${step.action}`).join('\n')}\n\n💧 Water: ${waterTreatment === 'pure' ? 'Pure water' : 'With Apax drops'}\n\nCreated with Coffee Brewing Optimizer`;
+
+                    if (navigator.share) {
+                        try {
+                            await navigator.share({
+                                title: recipe.name,
+                                text: shareText
+                            });
+                        } catch (error) {
+                            console.log('Share cancelled');
+                        }
+                    } else {
+                        navigator.clipboard.writeText(shareText);
+                        alert('Recipe copied to clipboard!');
+                    }
+                };
+
+                if (currentView === 'camera') {
+                    return React.createElement('div', { className: 'min-h-screen flex flex-col' },
+                        React.createElement('div', { className: 'flex-1 flex flex-col items-center justify-center p-6' },
+                            React.createElement('div', { className: 'text-center mb-8' },
+                                React.createElement(Coffee, { className: 'w-16 h-16 text-white mx-auto mb-4' }),
+                                React.createElement('h1', { className: 'text-3xl font-bold text-white mb-2' }, 'Coffee Brewing Optimizer'),
+                                React.createElement('p', { className: 'text-white text-opacity-80' }, 'Capture your coffee bag for optimized brewing recipes')
+                            ),
+                            !apiKey && React.createElement('div', { className: 'w-full max-w-md mb-6' },
+                                React.createElement('input', {
+                                    type: 'password',
+                                    placeholder: 'Enter Claude API Key',
+                                    value: apiKey,
+                                    onChange: (e) => setApiKey(e.target.value),
+                                    className: 'w-full p-3 rounded-lg bg-white bg-opacity-10 text-white placeholder-white placeholder-opacity-60 border border-white border-opacity-20 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-30'
+                                })
+                            ),
+                            React.createElement('div', { className: 'camera-overlay w-full max-w-sm h-64 bg-white bg-opacity-10 rounded-xl mb-6 flex items-center justify-center' },
+                                React.createElement('div', { className: 'text-center' },
+                                    React.createElement(Camera, { className: 'w-12 h-12 text-white text-opacity-60 mx-auto mb-2' }),
+                                    React.createElement('p', { className: 'text-white text-opacity-60 text-sm' }, 'Position coffee bag here')
+                                )
+                            ),
+                            React.createElement('div', { className: 'space-y-3 w-full max-w-sm' },
+                                React.createElement('button', {
+                                    onClick: () => fileInputRef.current?.click(),
+                                    disabled: !apiKey,
+                                    className: 'w-full bg-white text-orange-600 py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed'
+                                },
+                                    React.createElement(Camera, { className: 'w-5 h-5' }),
+                                    React.createElement('span', {}, 'Take Photo')
+                                ),
+                                React.createElement('button', {
+                                    onClick: () => fileInputRef.current?.click(),
+                                    disabled: !apiKey,
+                                    className: 'w-full glass-effect text-white py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed'
+                                },
+                                    React.createElement(Upload, { className: 'w-5 h-5' }),
+                                    React.createElement('span', {}, 'Choose from Library')
+                                )
+                            ),
+                            React.createElement('input', {
+                                ref: fileInputRef,
+                                type: 'file',
+                                accept: 'image/*',
+                                capture: 'environment',
+                                onChange: (e) => handleImageCapture(e.target.files[0]),
+                                className: 'hidden'
+                            })
+                        )
+                    );
                 }
-            };
 
-            const CameraView = () => (
-                <div className="min-h-screen flex flex-col">
-                    <div className="flex-1 flex flex-col items-center justify-center p-6">
-                        <div className="text-center mb-8">
-                            <Coffee className="w-16 h-16 text-white mx-auto mb-4" />
-                            <h1 className="text-3xl font-bold text-white mb-2">Coffee Brewing Optimizer</h1>
-                            <p className="text-white/80">Capture your coffee bag for optimized brewing recipes</p>
-                        </div>
+                if (currentView === 'analyze') {
+                    return React.createElement('div', { className: 'min-h-screen flex flex-col p-6' },
+                        React.createElement('div', { className: 'flex items-center mb-6' },
+                            React.createElement('button', {
+                                onClick: () => setCurrentView('camera'),
+                                className: 'text-white p-2'
+                            },
+                                React.createElement(X, { className: 'w-6 h-6' })
+                            ),
+                            React.createElement('h2', { className: 'text-xl font-bold text-white ml-4' }, 'Analyze Coffee')
+                        ),
+                        React.createElement('div', { className: 'flex-1 flex flex-col items-center' },
+                            capturedImage && React.createElement('div', { className: 'w-full max-w-md mb-6' },
+                                React.createElement('img', {
+                                    src: capturedImage,
+                                    alt: 'Coffee bag',
+                                    className: 'w-full h-64 object-cover rounded-xl'
+                                })
+                            ),
+                            React.createElement('div', { className: 'w-full max-w-md mb-6' },
+                                React.createElement('label', { className: 'block text-white mb-2 font-medium' }, 'Water Treatment'),
+                                React.createElement('div', { className: 'grid grid-cols-2 gap-3' },
+                                    React.createElement('button', {
+                                        onClick: () => setWaterTreatment('pure'),
+                                        className: `p-3 rounded-lg flex items-center space-x-2 ${waterTreatment === 'pure' ? 'bg-white text-orange-600' : 'bg-white bg-opacity-10 text-white border border-white border-opacity-20'}`
+                                    },
+                                        React.createElement(Droplets, { className: 'w-4 h-4' }),
+                                        React.createElement('span', { className: 'text-sm' }, 'Pure Water')
+                                    ),
+                                    React.createElement('button', {
+                                        onClick: () => setWaterTreatment('apax'),
+                                        className: `p-3 rounded-lg flex items-center space-x-2 ${waterTreatment === 'apax' ? 'bg-white text-orange-600' : 'bg-white bg-opacity-10 text-white border border-white border-opacity-20'}`
+                                    },
+                                        React.createElement(Zap, { className: 'w-4 h-4' }),
+                                        React.createElement('span', { className: 'text-sm' }, 'Apax Drops')
+                                    )
+                                )
+                            ),
+                            error && React.createElement('div', { className: 'w-full max-w-md mb-6 p-4 bg-red-500 bg-opacity-20 border border-red-500 border-opacity-30 rounded-lg' },
+                                React.createElement('div', { className: 'flex items-center space-x-2 text-red-200' },
+                                    React.createElement(AlertCircle, { className: 'w-5 h-5' }),
+                                    React.createElement('span', { className: 'text-sm' }, error)
+                                )
+                            ),
+                            React.createElement('button', {
+                                onClick: analyzeImage,
+                                disabled: isAnalyzing || !apiKey,
+                                className: 'w-full max-w-md bg-white text-orange-600 py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed'
+                            },
+                                isAnalyzing ? React.createElement('div', { className: 'loading-spinner border-orange-600' }) : React.createElement(Zap, { className: 'w-5 h-5' }),
+                                React.createElement('span', {}, isAnalyzing ? 'Analyzing...' : 'Analyze & Generate Recipe')
+                            )
+                        )
+                    );
+                }
 
-                        {!apiKey && (
-                            <div className="w-full max-w-md mb-6">
-                                <input
-                                    type="password"
-                                    placeholder="Enter Claude API Key"
-                                    value={apiKey}
-                                    onChange={(e) => setApiKey(e.target.value)}
-                                    className="w-full p-3 rounded-lg bg-white/10 text-white placeholder-white/60 border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
-                                />
-                            </div>
-                        )}
+                if (currentView === 'recipe' && recipe) {
+                    return React.createElement('div', { className: 'min-h-screen flex flex-col p-6' },
+                        React.createElement('div', { className: 'flex items-center justify-between mb-6' },
+                            React.createElement('button', {
+                                onClick: () => setCurrentView('camera'),
+                                className: 'text-white p-2'
+                            },
+                                React.createElement(X, { className: 'w-6 h-6' })
+                            ),
+                            React.createElement('h2', { className: 'text-xl font-bold text-white' }, 'Optimized Recipe'),
+                            React.createElement('div', {})
+                        ),
+                        React.createElement('div', { className: 'flex-1' },
+                            React.createElement('div', { className: 'bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-6 mb-6' },
+                                React.createElement('h3', { className: 'text-2xl font-bold text-white mb-4' }, recipe.name),
+                                React.createElement('div', { className: 'grid grid-cols-2 gap-4 mb-6' },
+                                    React.createElement('div', { className: 'flex items-center space-x-2 text-white text-opacity-80' },
+                                        React.createElement(MapPin, { className: 'w-4 h-4' }),
+                                        React.createElement('span', { className: 'text-sm' }, recipe.coffee.country)
+                                    ),
+                                    React.createElement('div', { className: 'flex items-center space-x-2 text-white text-opacity-80' },
+                                        React.createElement(Award, { className: 'w-4 h-4' }),
+                                        React.createElement('span', { className: 'text-sm' }, recipe.coffee.roastLevel)
+                                    ),
+                                    React.createElement('div', { className: 'flex items-center space-x-2 text-white text-opacity-80' },
+                                        React.createElement(Thermometer, { className: 'w-4 h-4' }),
+                                        React.createElement('span', { className: 'text-sm' }, `${recipe.profile.baseTemp}°F`)
+                                    ),
+                                    React.createElement('div', { className: 'flex items-center space-x-2 text-white text-opacity-80' },
+                                        React.createElement(Clock, { className: 'w-4 h-4' }),
+                                        React.createElement('span', { className: 'text-sm' }, `${recipe.profile.totalTime} min`)
+                                    )
+                                ),
+                                recipe.coffee.flavorNotes && recipe.coffee.flavorNotes.length > 0 && React.createElement('div', { className: 'mb-6' },
+                                    React.createElement('h4', { className: 'text-white font-semibold mb-2' }, 'Flavor Notes'),
+                                    React.createElement('div', { className: 'flex flex-wrap gap-2' },
+                                        recipe.coffee.flavorNotes.map((note, index) =>
+                                            React.createElement('span', {
+                                                key: index,
+                                                className: 'bg-white bg-opacity-20 text-white px-3 py-1 rounded-full text-sm'
+                                            }, note)
+                                        )
+                                    )
+                                )
+                            ),
+                            React.createElement('div', { className: 'bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-6 mb-6' },
+                                React.createElement('h4', { className: 'text-white font-semibold mb-4 flex items-center space-x-2' },
+                                    React.createElement(Coffee, { className: 'w-5 h-5' }),
+                                    React.createElement('span', {}, 'Brewing Steps')
+                                ),
+                                React.createElement('div', { className: 'space-y-4' },
+                                    recipe.profile.steps.map((step, index) =>
+                                        React.createElement('div', {
+                                            key: index,
+                                            className: 'flex items-start space-x-4'
+                                        },
+                                            React.createElement('div', { className: 'step-number' }, index + 1),
+                                            React.createElement('div', { className: 'flex-1' },
+                                                React.createElement('div', { className: 'flex items-center space-x-4 mb-1' },
+                                                    React.createElement('span', { className: 'text-white font-medium' }, `${step.temp}°F`),
+                                                    React.createElement('span', { className: 'text-white text-opacity-80 text-sm' }, step.time)
+                                                ),
+                                                React.createElement('p', { className: 'text-white text-opacity-90 text-sm' }, step.action)
+                                            )
+                                        )
+                                    )
+                                )
+                            ),
+                            React.createElement('div', { className: 'grid grid-cols-2 gap-3' },
+                                React.createElement('button', {
+                                    onClick: downloadRecipe,
+                                    className: 'bg-white text-orange-600 py-4 rounded-xl font-semibold flex items-center justify-center space-x-2'
+                                },
+                                    React.createElement(Download, { className: 'w-5 h-5' }),
+                                    React.createElement('span', {}, 'Download')
+                                ),
+                                React.createElement('button', {
+                                    onClick: shareRecipe,
+                                    className: 'glass-effect text-white py-4 rounded-xl font-semibold flex items-center justify-center space-x-2'
+                                },
+                                    React.createElement(Share2, { className: 'w-5 h-5' }),
+                                    React.createElement('span', {}, 'Share')
+                                )
+                            )
+                        )
+                    );
+                }
 
-                        <div className="camera-overlay w-full max-w-sm h-64 bg-white/10 rounded-xl mb-6 flex items-center justify-center">
-                            <div className="text-center">
-                                <Camera className="w-12 h-12 text-white/60 mx-auto mb-2" />
-                                <p className="text-white/60 text-sm">Position coffee bag here</p>
-                            </div>
-                        </div>
+                return React.createElement('div', { className: 'min-h-screen coffee-bg' });
+            }
 
-                        <div className="space-y-3 w-full max-w-sm">
-                            <button
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={!apiKey}
-                                className="w-full bg-white text-coffee-600 py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <Camera className="w-5 h-5" />
-                                <span>Take Photo</span>
-                            </button>
-
-                            <button
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={!apiKey}
-                                className="w-full glass-effect text-white py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <Upload className="w-5 h-5" />
-                                <span>Choose from Library</span>
-                            </button>
-                        </div>
-
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            onChange={(e) => handleImageCapture(e.target.files[0])}
-                            className="hidden"
-                        />
-                    </div>
-                </div>
-            );
-
-            const AnalyzeView = () => (
-                <div className="min-h-screen flex flex-col p-6">
-                    <div className="flex items-center mb-6">
-                        <button
-                            onClick={() => setCurrentView('camera')}
-                            className="text-white p-2"
-                        >
-                            <X className="w-6 h-6" />
-                        </button>
-                        <h2 className="text-xl font-bold text-white ml-4">Analyze Coffee</h2>
-                    </div>
-
-                    <div className="flex-1 flex flex-col items-center">
-                        {capturedImage && (
-                            <div className="w-full max-w-md mb-6">
-                                <img 
-                                    src={capturedImage} 
-                                    alt="Coffee bag" 
-                                    className="w-full h-64 object-cover rounded-xl"
-                                />
-                            </div>
-                        )}
-
-                        <div className="w-full max-w-md mb-6">
-                            <label className="block text-white mb-2 font-medium">Water Treatment</label>
-                            <div className="grid grid-cols-2 gap-3">
-                                <button
-                                    onClick={() => setWaterTreatment('pure')}
-                                    className={`p-3 rounded-lg flex items-center space-x-2 ${
-                                        waterTreatment === 'pure' 
-                                            ? 'bg-white text-coffee-600' 
-                                            : 'bg-white/10 text-white border border-white/20'
-                                    }`}
-                                >
-                                    <Droplets className="w-4 h-4" />
-                                    <span className="text-sm">Pure Water</span>
-                                </button>
-                                <button
-                                    onClick={() => setWaterTreatment('apax')}
-                                    className={`p-3 rounded-lg flex items-center space-x-2 ${
-                                        waterTreatment === 'apax' 
-                                            ? 'bg-white text-coffee-600' 
-                                            : 'bg-white/10 text-white border border-white/20'
-                                    }`}
-                                >
-                                    <Zap className="w-4 h-4" />
-                                    <span className="text-sm">Apax Drops</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        {error && (
-                            <div className="w-full max-w-md mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
-                                <div className="flex items-center space-x-2 text-red-200">
-                                    <AlertCircle className="w-5 h-5" />
-                                    <span className="text-sm">{error}</span>
-                                </div>
-                            </div>
-                        )}
-
-                        <button
-                            onClick={analyzeImage}
-                            disabled={isAnalyzing || !apiKey}
-                            className="w-full max-w-md bg-white text-coffee-600 py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isAnalyzing ? (
-                                <>
-                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-coffee-600"></div>
-                                    <span>Analyzing...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Zap className="w-5 h-5" />
-                                    <span>Analyze & Generate Recipe</span>
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            );
-
-            const RecipeView = () => (
-                <div className="min-h-screen flex flex-col p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <button
-                            onClick={() => setCurrentView('camera')}
-                            className="text-white p-2"
-                        >
-                            <X className="w-6 h-6" />
-                        </button>
-                        <h2 className="text-xl font-bold text-white">Optimized Recipe</h2>
-                        <div></div>
-                    </div>
-
-                    {recipe && (
-                        <div className="flex-1">
-                            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6">
-                                <h3 className="text-2xl font-bold text-white mb-4">{recipe.name}</h3>
-                                
-                                <div className="grid grid-cols-2 gap-4 mb-6">
-                                    <div className="flex items-center space-x-2 text-white/80">
-                                        <MapPin className="w-4 h-4" />
-                                        <span className="text-sm">{recipe.coffee.country}</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2 text-white/80">
-                                        <Award className="w-4 h-4" />
-                                        <span className="text-sm">{recipe.coffee.roastLevel}</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2 text-white/80">
-                                        <Thermometer className="w-4 h-4" />
-                                        <span className="text-sm">{recipe.profile.baseTemp}°F</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2 text-white/80">
-                                        <Clock className="w-4 h-4" />
-                                        <span className="text-sm">{recipe.profile.totalTime} min</span>
-                                    </div>
-                                </div>
-
-                                {recipe.coffee.flavorNotes && recipe.coffee.flavorNotes.length > 0 && (
-                                    <div className="mb-6">
-                                        <h4 className="text-white font-semibold mb-2">Flavor Notes</h4>
-                                        <div className="flex flex-wrap gap-2">
-                                            {recipe.coffee.flavorNotes.map((note, index) => (
-                                                <span key={index} className="bg-white/20 text-white px-3 py-1 rounded-full text-sm">
-                                                    {note}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6">
-                                <h4 className="text-white font-semibold mb-4 flex items-center space-x-2">
-                                    <Coffee className="w-5 h-5" />
-                                    <span>Brewing Steps</span>
-                                </h4>
-                                
-                                <div className="space-y-4">
-                                    {recipe.profile.steps.map((step, index) => (
-                                        <div key={index} className="flex items-start space-x-4">
-                                            <div className="step-number">{index + 1}</div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center space-x-4 mb-1">
-                                                    <span className="text-white font-medium">{step.temp}°F</span>
-                                                    <span className="text-white/80 text-sm">{step.time}</span>
-                                                </div>
-                                                <p className="text-white/90 text-sm">{step.action}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <button
-                                    onClick={downloadRecipe}
-                                    className="bg-white text-coffee-600 py-4 rounded-xl font-semibold flex items-center justify-center space-x-2"
-                                >
-                                    <Download className="w-5 h-5" />
-                                    <span>Download</span>
-                                </button>
-
-                                <button
-                                    onClick={shareRecipe}
-                                    className="glass-effect text-white py-4 rounded-xl font-semibold flex items-center justify-center space-x-2"
-                                >
-                                    <Share2 className="w-5 h-5" />
-                                    <span>Share</span>
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-
-            return (
-                <div className="min-h-screen coffee-bg">
-                    {currentView === 'camera' && <CameraView />}
-                    {currentView === 'analyze' && <AnalyzeView />}
-                    {currentView === 'recipe' && <RecipeView />}
-                </div>
-            );
+            ReactDOM.render(React.createElement(CoffeeBrewingApp), document.getElementById('root'));
         }
 
-            ReactDOM.render(<CoffeeBrewingApp />, document.getElementById('root'));
+        // Initialize the app when DOM is loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
         }
     </script>
 </body>
