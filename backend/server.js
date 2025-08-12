@@ -94,10 +94,11 @@ app.post('/api/analyze-coffee', async (req, res) => {
                         },
                         {
                             type: 'text',
-                            text: `Analyze this coffee bag image and extract the following information in JSON format:
+                            text: `Analyze this coffee bag image and create a complete Fellow Aiden brewing recipe in JSON format:
+
                             {
                                 "country": "country of origin",
-                                "region": "specific region/farm if visible",
+                                "region": "specific region/farm if visible", 
                                 "roaster": "roaster name",
                                 "coffeeName": "specific coffee name/blend",
                                 "roastLevel": "light/medium/dark",
@@ -105,8 +106,47 @@ app.post('/api/analyze-coffee', async (req, res) => {
                                 "variety": "bean variety if visible",
                                 "flavorNotes": ["flavor", "notes", "array"],
                                 "elevation": "elevation if visible",
-                                "confidence": "high/medium/low based on image clarity"
+                                "confidence": "high/medium/low based on image clarity",
+                                "brewingProfile": {
+                                    "baseTemp": 200,
+                                    "grindSize": "medium/medium-fine/coarse",
+                                    "totalTime": 4.5,
+                                    "waterRatio": 16,
+                                    "steps": [
+                                        {
+                                            "stepNumber": 1,
+                                            "temp": 205,
+                                            "time": "0:00-0:45",
+                                            "action": "Bloom with 2x coffee weight in water",
+                                            "pourPattern": "center"
+                                        },
+                                        {
+                                            "stepNumber": 2, 
+                                            "temp": 200,
+                                            "time": "0:45-2:30",
+                                            "action": "Slow circular pour to 60% total water",
+                                            "pourPattern": "spiral"
+                                        },
+                                        {
+                                            "stepNumber": 3,
+                                            "temp": 195,
+                                            "time": "2:30-4:30", 
+                                            "action": "Final pour and drawdown",
+                                            "pourPattern": "spiral"
+                                        }
+                                    ]
+                                }
                             }
+
+                            Generate optimized brewing parameters based on:
+                            - Coffee origin characteristics (Ethiopian beans need higher temps, Brazilian beans lower temps, etc.)
+                            - Roast level (light roasts need higher temps, dark roasts need lower temps)  
+                            - Processing method (washed coffees vs natural process)
+                            - Specific flavor notes and bean variety if visible
+                            - Fellow Aiden brewing best practices
+
+                            Create 3 brewing steps with decreasing temperatures and specific timing. Consider the coffee's unique characteristics to optimize extraction.
+                            
                             Only return the JSON, no other text.`
                         }
                     ]
