@@ -6,13 +6,98 @@
     <title>Coffee Brewing Optimizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        :root {
+            /* Default Coffee Theme */
+            --bg-primary: linear-gradient(135deg, #f59e3d 0%, #e3681a 50%, #bc4f18 100%);
+            --bg-secondary: rgba(255, 255, 255, 0.1);
+            --bg-accent: rgba(255, 255, 255, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-accent: rgba(255, 255, 255, 0.7);
+            --border-primary: rgba(255, 255, 255, 0.2);
+            --border-secondary: rgba(255, 255, 255, 0.3);
+            --btn-primary-bg: #ffffff;
+            --btn-primary-text: #ea580c;
+            --btn-secondary-bg: rgba(255, 255, 255, 0.1);
+            --btn-secondary-text: #ffffff;
+            --step-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        /* Dark Espresso Theme */
+        [data-theme="dark"] {
+            --bg-primary: linear-gradient(135deg, #1f2937 0%, #111827 50%, #000000 100%);
+            --bg-secondary: rgba(255, 255, 255, 0.05);
+            --bg-accent: rgba(255, 255, 255, 0.1);
+            --text-primary: #f9fafb;
+            --text-secondary: rgba(249, 250, 251, 0.8);
+            --text-accent: rgba(249, 250, 251, 0.6);
+            --border-primary: rgba(255, 255, 255, 0.1);
+            --border-secondary: rgba(255, 255, 255, 0.2);
+            --btn-primary-bg: #f59e0b;
+            --btn-primary-text: #ffffff;
+            --btn-secondary-bg: rgba(245, 158, 11, 0.1);
+            --btn-secondary-text: #f59e0b;
+            --step-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        /* Cool Blue Theme */
+        [data-theme="blue"] {
+            --bg-primary: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+            --bg-secondary: rgba(255, 255, 255, 0.1);
+            --bg-accent: rgba(255, 255, 255, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-accent: rgba(255, 255, 255, 0.7);
+            --border-primary: rgba(255, 255, 255, 0.2);
+            --border-secondary: rgba(255, 255, 255, 0.3);
+            --btn-primary-bg: #ffffff;
+            --btn-primary-text: #2563eb;
+            --btn-secondary-bg: rgba(255, 255, 255, 0.1);
+            --btn-secondary-text: #ffffff;
+            --step-gradient: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+        }
+
+        /* Forest Green Theme */
+        [data-theme="green"] {
+            --bg-primary: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
+            --bg-secondary: rgba(255, 255, 255, 0.1);
+            --bg-accent: rgba(255, 255, 255, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-accent: rgba(255, 255, 255, 0.7);
+            --border-primary: rgba(255, 255, 255, 0.2);
+            --border-secondary: rgba(255, 255, 255, 0.3);
+            --btn-primary-bg: #ffffff;
+            --btn-primary-text: #047857;
+            --btn-secondary-bg: rgba(255, 255, 255, 0.1);
+            --btn-secondary-text: #ffffff;
+            --step-gradient: linear-gradient(135deg, #34d399 0%, #059669 100%);
+        }
+
+        /* Purple Lavender Theme */
+        [data-theme="purple"] {
+            --bg-primary: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
+            --bg-secondary: rgba(255, 255, 255, 0.1);
+            --bg-accent: rgba(255, 255, 255, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-accent: rgba(255, 255, 255, 0.7);
+            --border-primary: rgba(255, 255, 255, 0.2);
+            --border-secondary: rgba(255, 255, 255, 0.3);
+            --btn-primary-bg: #ffffff;
+            --btn-primary-text: #7c3aed;
+            --btn-secondary-bg: rgba(255, 255, 255, 0.1);
+            --btn-secondary-text: #ffffff;
+            --step-gradient: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+        }
+
         .coffee-bg {
-            background: linear-gradient(135deg, #f59e3d 0%, #e3681a 50%, #bc4f18 100%);
+            background: var(--bg-primary);
         }
         .glass-effect {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--bg-secondary);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--border-primary);
         }
         .camera-overlay {
             position: relative;
@@ -26,7 +111,7 @@
             width: 80%;
             height: 80%;
             transform: translate(-50%, -50%);
-            border: 2px dashed rgba(255, 255, 255, 0.5);
+            border: 2px dashed var(--border-secondary);
             border-radius: 12px;
             pointer-events: none;
         }
@@ -38,13 +123,13 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            color: white;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: var(--text-primary);
+            background: var(--step-gradient);
         }
         .loading-spinner {
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border: 2px solid var(--border-primary);
             border-radius: 50%;
-            border-top: 2px solid #fff;
+            border-top: 2px solid var(--text-primary);
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
@@ -74,17 +159,69 @@
             transform: none;
         }
         .btn-primary {
-            background: white;
-            color: #ea580c;
+            background: var(--btn-primary-bg);
+            color: var(--btn-primary-text);
         }
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--btn-secondary-bg);
+            color: var(--btn-secondary-text);
+            border: 1px solid var(--border-primary);
         }
+        .theme-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .theme-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--border-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .theme-option:hover {
+            transform: scale(1.1);
+            border-color: var(--text-primary);
+        }
+        .theme-option.active {
+            border-color: var(--text-primary);
+            box-shadow: 0 0 0 3px var(--border-secondary);
+        }
+        .theme-coffee { background: linear-gradient(135deg, #f59e3d 0%, #e3681a 50%, #bc4f18 100%); }
+        .theme-dark { background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #000000 100%); }
+        .theme-blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%); }
+        .theme-green { background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%); }
+        .theme-purple { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%); }
+        
+        /* Theme-aware text colors */
+        .text-theme-primary { color: var(--text-primary); }
+        .text-theme-secondary { color: var(--text-secondary); }
+        .text-theme-accent { color: var(--text-accent); }
+        
+        /* Theme-aware backgrounds */
+        .bg-theme-secondary { background: var(--bg-secondary); }
+        .bg-theme-accent { background: var(--bg-accent); }
+        
+        /* Theme-aware borders */
+        .border-theme-primary { border-color: var(--border-primary); }
+        .border-theme-secondary { border-color: var(--border-secondary); }
     </style>
 </head>
 <body class="min-h-screen coffee-bg">
+    <!-- Theme Selector -->
+    <div class="theme-selector">
+        <div class="flex flex-col gap-2">
+            <div class="theme-option theme-coffee active" data-theme="coffee" title="Classic Coffee"></div>
+            <div class="theme-option theme-dark" data-theme="dark" title="Dark Espresso"></div>
+            <div class="theme-option theme-blue" data-theme="blue" title="Cool Blue"></div>
+            <div class="theme-option theme-green" data-theme="green" title="Forest Green"></div>
+            <div class="theme-option theme-purple" data-theme="purple" title="Purple Lavender"></div>
+        </div>
+    </div>
+
     <div id="root">
         <div class="min-h-screen flex items-center justify-center">
             <div class="text-center text-white">
@@ -139,6 +276,56 @@
 
     <script>
         console.log('Script starting...');
+
+        // Theme Management
+        const THEMES = {
+            coffee: 'coffee',
+            dark: 'dark', 
+            blue: 'blue',
+            green: 'green',
+            purple: 'purple'
+        };
+
+        function initializeTheme() {
+            // Load saved theme or default to coffee
+            const savedTheme = localStorage.getItem('coffee-app-theme') || 'coffee';
+            setTheme(savedTheme);
+        }
+
+        function setTheme(themeName) {
+            // Apply theme to document
+            if (themeName === 'coffee') {
+                document.documentElement.removeAttribute('data-theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', themeName);
+            }
+            
+            // Update active theme indicator
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.classList.remove('active');
+                if (option.dataset.theme === themeName) {
+                    option.classList.add('active');
+                }
+            });
+            
+            // Save theme preference
+            localStorage.setItem('coffee-app-theme', themeName);
+        }
+
+        function setupThemeSelector() {
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    const theme = option.dataset.theme;
+                    setTheme(theme);
+                });
+            });
+        }
+
+        // Initialize theme system
+        initializeTheme();
+        
+        // Setup theme selector after DOM loads
+        document.addEventListener('DOMContentLoaded', setupThemeSelector);
 
         // Water treatments (still needed for adjustments)
         const WATER_TREATMENTS = {
@@ -504,7 +691,7 @@
                                 <div class="space-y-3">
                                     ${state.recipe.profile.steps.map((step, index) => `
                                         <div class="flex items-start space-x-3">
-                                            <div class="w-6 h-6 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center flex-shrink-0">
+                                            <div class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style="background: var(--step-gradient);">
                                                 <span class="text-white text-xs font-bold">${index + 1}</span>
                                             </div>
                                             <div class="flex-1 min-w-0">
@@ -564,6 +751,7 @@
 
         console.log('Initial render...');
         render();
+        setupThemeSelector();
         console.log('App initialized');
     </script>
 </body>
