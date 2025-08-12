@@ -1,0 +1,27 @@
+{
+  "name": "Coffee Brewing Optimizer Backend",
+  "description": "Secure backend proxy for Coffee Brewing Optimizer - handles Claude AI vision API calls for coffee bag analysis and brewing recipe optimization",
+  "repository": "https://github.com/avidan/claude-coffee",
+  "keywords": ["coffee", "ai", "vision", "claude", "brewing", "optimization", "fellow-aiden"],
+  "image": "heroku/nodejs",
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "env": {
+    "CLAUDE_API_KEY": {
+      "description": "Your Claude API key from https://console.anthropic.com/ - this will be used securely on the server to analyze coffee bag images",
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "scripts": {
+    "postdeploy": "echo 'Backend deployed successfully! Copy your app URL and update the frontend.'"
+  }
+}
