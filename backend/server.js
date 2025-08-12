@@ -42,7 +42,8 @@ app.post('/api/analyze-coffee', async (req, res) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-api-key': process.env.CLAUDE_API_KEY
+                'x-api-key': process.env.CLAUDE_API_KEY,
+                'anthropic-version': '2023-06-01'
             },
             body: JSON.stringify({
                 model: 'claude-sonnet-4-20250514',
